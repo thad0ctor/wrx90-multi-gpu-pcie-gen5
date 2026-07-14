@@ -1,0 +1,13 @@
+[Unit]
+Description=Force PCIe Gen 5 on WRX90 GPUs
+DefaultDependencies=no
+Before=systemd-modules-load.service
+After=systemd-udevd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pcie-gen5-fix.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target

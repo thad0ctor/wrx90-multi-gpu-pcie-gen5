@@ -1,0 +1,23 @@
+#!/bin/sh
+exec tail -n +3 $0
+# Custom boot entry for multi-GPU recognition + PCIe Gen5 on AMD WRX90.
+#
+# Before use, replace the two placeholders below:
+#   __ROOT_UUID__      -> your root filesystem UUID   (find with: findmnt -no UUID /)
+#   __KERNEL_VERSION__ -> the kernel you want to boot (find with: uname -r  or  ls /boot/vmlinuz-*)
+#
+# Then: chmod +x this file, set GRUB_DEFAULT="multigpu-pcie" in /etc/default/grub, run: sudo update-grub
+# The kernel command line is the actual fix -- see README.md for what each flag does.
+
+menuentry 'Ubuntu - Multi-GPU PCIe Gen5' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'multigpu-pcie' {
+    recordfail
+    load_video
+    gfxmode $linux_gfx_mode
+    insmod gzio
+    if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid --set=root __ROOT_UUID__
+    linux /boot/vmlinuz-__KERNEL_VERSION__ root=UUID=__ROOT_UUID__ ro quiet splash pci=realloc pci=hpmemsize=128G pcie_aspm=off amd_iommu=on iommu=pt pci=noaer pcie_port_pm=off
+    initrd /boot/initrd.img-__KERNEL_VERSION__
+}
