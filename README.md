@@ -2,8 +2,9 @@
 
 Boot and system configuration to get a large number of NVIDIA GPUs fully recognized, and to negotiate **PCIe Gen 5**, on the AMD Ryzen Threadripper PRO **WRX90** platform (tested on an ASUS Pro WS WRX90E-SAGE SE with a mix of Blackwell, Ada and Ampere cards). If your GPUs aren't all enumerated, or Gen5-capable cards come up at a lower link speed, this is the fix.
 
-The solution has four independent parts:
+The solution has five parts — one in firmware, four in the OS:
 
+0. **BIOS/UEFI** — PCIe slot bifurcation (`x8/x8` on split slots) plus Above 4G Decoding and Re-Size BAR. See **[docs/BIOS-bifurcation.md](docs/BIOS-bifurcation.md)**. Do this first; the OS flags below depend on it.
 1. **Kernel boot parameters** — reserve enough MMIO/BAR space and stabilize the PCIe links so every GPU enumerates.
 2. **Boot-time PCIe Gen 5 retrain** — a small `setpci` service that forces Gen5 on the bridges above Gen5 GPUs (works around a BIOS bifurcation bug).
 3. **NVIDIA module options** — mode setting on, `nouveau` blacklisted.
@@ -20,7 +21,8 @@ Validated on this system. Other WRX90 boards, kernels and driver branches should
 | OS | Ubuntu 24.04.4 LTS (Noble) |
 | Kernel | 6.17.0-35-generic (HWE) |
 | GRUB | 2.12 |
-| Motherboard | ASUS Pro WS WRX90E-SAGE SE, BIOS 9936 (2025-09-15) |
+| Motherboard | ASUS Pro WS WRX90E-SAGE SE |
+| BIOS | 9936 (2025-09-15) — see [docs/BIOS-bifurcation.md](docs/BIOS-bifurcation.md) |
 | CPU | AMD Ryzen Threadripper PRO 7965WX (WRX90) |
 | NVIDIA driver | 610.43.02, **Open** kernel module |
 | CUDA (runtime/UMD) | 13.3 |
@@ -137,6 +139,7 @@ nvidia-smi --query-gpu=index,persistence_mode --format=csv
 
 ```
 README.md
+docs/BIOS-bifurcation.md                    UEFI bifurcation + large-BAR settings, BIOS download links
 apply.sh                                    installer (copies files, fills placeholders, enables services)
 etc/grub.d/09_multigpu-pcie                 custom boot entry (placeholders for UUID + kernel)
 etc/systemd/system/pcie-gen5-fix.service    boot-time Gen5 retrain service
